@@ -7,7 +7,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 exports.login = async (req, res) => {
     try {
-        console.log(req.body);
         const { phone, password } = req.body;
 
         const staffService = new StaffService(MongoDB.client);

@@ -19,7 +19,6 @@ class StaffService {
     async create(payload) {
         payload.Password = await bcrypt.hash(payload.Password, 10);
         const nhanVien = this.extractNhanVienData(payload);
-        console.log(nhanVien);
         const result = await this.NhanVien.insertOne(nhanVien);
         return result;
     }
