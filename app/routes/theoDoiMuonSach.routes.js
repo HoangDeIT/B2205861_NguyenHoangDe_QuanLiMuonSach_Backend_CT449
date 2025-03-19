@@ -9,5 +9,6 @@ router.route("/")
 
 router.route("/:id")
     .delete(controller.deleteById) // Xóa theo _id
-    .get(controller.getById);
+    .get(controller.getById)
+    .post(controller.handleTraSach)
 module.exports = router;

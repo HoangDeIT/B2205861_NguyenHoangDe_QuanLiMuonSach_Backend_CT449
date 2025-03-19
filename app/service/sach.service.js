@@ -12,7 +12,8 @@ class SachService {
             SOQUYEN: payload.SOQUYEN,
             NAMXUATBAN: payload.NAMXUATBAN,
             MANXB: payload.MANXB,
-            NGUONGOC_TACGIA: payload.NGUONGOC_TACGIA
+            NGUONGOC_TACGIA: payload.NGUONGOC_TACGIA,
+            IMAGEURL: payload.IMAGEURL
         };
         Object.keys(doc).forEach((key) => doc[key] === undefined && delete doc[key]);
         return doc;
@@ -66,13 +67,25 @@ class SachService {
         return result.deletedCount > 0;
     }
     async getAllNoPagination() {
-        return await this.Sach.find({}).toArray();
+        return await this.Sach.find({ SOQUYEN: { $gt: 0 } }).toArray();
     }
     async getById(id) {
         if (!ObjectId.isValid(id)) {
             throw new Error("ID không hợp lệ");
         }
         const result = await this.Sach.findOne({ _id: new ObjectId(id) });
+        return result;
+    }
+    async updateQuantity(id, delta) {
+        if (!ObjectId.isValid(id)) {
+            throw new Error("ID không hợp lệ");
+        }
+        const result = await this.Sach.findOneAndUpdate(
+            { _id: new ObjectId(id) },
+            { $set: { SOQUYEN: delta } },
+            { returnDocument: "after" }
+        );
+
         return result;
     }
 }

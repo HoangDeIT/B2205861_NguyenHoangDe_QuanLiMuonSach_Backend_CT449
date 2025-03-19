@@ -19,6 +19,14 @@ class StaffService {
     async create(payload) {
         payload.Password = await bcrypt.hash(payload.Password, 10);
         const nhanVien = this.extractNhanVienData(payload);
+        const maxNV = await this.NhanVien.find().sort({ MANV: -1 }).limit(1).toArray();
+        let newId = "NV1";
+        if (maxNV.length > 0) {
+            const lastId = maxNV[0].MANV;
+            const lastIdNumber = parseInt(lastId.replace("NV", ""));
+            newId = `NV${lastIdNumber + 1}`;
+        }
+        nhanVien.MANV = newId;
         const result = await this.NhanVien.insertOne(nhanVien);
         return result;
     }
@@ -38,6 +46,9 @@ class StaffService {
     }
     async getPhoneOne(phone) {
         return await this.NhanVien.findOne({ SoDienThoai: phone });
+    }
+    async getMANV(phone) {
+        return await this.NhanVien.findOne({ MANV: phone });
     }
     async update(id, payload) {
         if (!ObjectId.isValid(id)) {

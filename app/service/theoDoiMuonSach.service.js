@@ -21,13 +21,27 @@ class TheoDoiMuonSachService {
 
     async create(payload) {
         const doc = this.extractTheoDoiMuonSachData(payload);
+        const sachService = new SachService(MongoDB.client);
+        const sach = await sachService.getById(doc.MASACH);
+        console.log("323")
+        if (sach.SOQUYEN === 0) {
+            throw new Error("Sach khong con trong kho");
+        }
+        console.log("323")
+        await sachService.updateQuantity(doc.MASACH, sach.SOQUYEN - 1);
+        console.log("323")
         const result = await this.TheoDoiMuonSach.insertOne(doc);
         return result;
     }
 
-    async getAll(page, limit, search) {
+    async getAll(page, limit, isTra) {
         // Ví dụ: tìm kiếm theo MASACH
-        const query = search ? { MASACH: { $regex: search, $options: "i" } } : {};
+
+
+        const query = isTra == "true"
+            ? { NGAYTRA: { $exists: true, $ne: null } }  // Tìm bản ghi có NGAYTRA
+            : { NGAYTRA: { $exists: false } };           // Tìm bản ghi không có NGAYTRA
+        console.log(query)
         const skip = (page - 1) * limit;
 
         let docs = await this.TheoDoiMuonSach.find(query)
@@ -94,11 +108,21 @@ class TheoDoiMuonSachService {
 
         return res
     }
+    async getById(id) {
+        if (!ObjectId.isValid(id)) {
+            throw new Error("ID không hợp lệ");
+        }
+        const result = await this.TheoDoiMuonSach.findOne({ _id: new ObjectId(id) });
+        return result;
+    }
     async handleTraSach(payload) {
         // Chuyển đổi ngày hiện tại thành định dạng DD/MM/YYYY
         const today = new Date();
         const formattedDate = today.toLocaleDateString("en-GB");  // Định dạng DD/MM/YYYY
-
+        const sachService = new SachService(MongoDB.client);
+        const muon = await this.getById(payload);
+        const sach = await sachService.getById(muon.MASACH);
+        await sachService.updateQuantity(muon.MASACH, sach.SOQUYEN + 1);
         // Cập nhật ngày trả sách với định dạng chuỗi DD/MM/YYYY
         const result = await this.TheoDoiMuonSach.findOneAndUpdate(
             { _id: new ObjectId(payload) },

@@ -7,11 +7,11 @@ const dotenv = require("dotenv");
 dotenv.config();
 exports.login = async (req, res) => {
     try {
-        const { phone, password } = req.body;
+        const { MANV, password } = req.body;
 
         const staffService = new StaffService(MongoDB.client);
 
-        const staff = await staffService.getPhoneOne(phone);
+        const staff = await staffService.getMANV(MANV);
         if (!staff) return res.status(400).json({ message: "Sai tài khoản hoặc mật khẩu!" });
         // Kiểm tra mật khẩu
         const isPasswordValid = await bcrypt.compare(password, staff.Password);

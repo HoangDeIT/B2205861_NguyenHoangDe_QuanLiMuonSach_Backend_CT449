@@ -4,7 +4,10 @@ const MongoDB = require("../utils/mongodb.util");
 exports.create = async (req, res) => {
     try {
         const service = new SachService(MongoDB.client);
+        req.body.SOQUYEN = Number(req.body.SOQUYEN);
+        console.log(req.body)
         const doc = await service.create(req.body);
+
         return res.send(doc);
     } catch (error) {
         return res.status(500).send({ message: "Lỗi khi thêm sách" });
@@ -28,6 +31,7 @@ exports.findAll = async (req, res) => {
 exports.updateById = async (req, res) => {
     try {
         const service = new SachService(MongoDB.client);
+        req.body.SOQUYEN = Number(req.body.SOQUYEN);
         const doc = await service.update(req.body._id, req.body);
         return res.send(doc);
     } catch (error) {

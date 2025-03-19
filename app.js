@@ -21,7 +21,8 @@ app.use("/api/v1/reader", readerRouter)
 app.use("/api/v1/nxb", nhaXuatBanRouter);
 app.use("/api/v1/sach", sachRouter);
 app.use("/api/v1/muon", theoDoiMuonSachRouter);
-
+app.use("/api/v1/uploads", require("./app/routes/upload.route"));
+app.use("/images", express.static("uploads"));
 app.use((req, res, next) => {
     return next(new ApiError(404, "Resource not found"));
 })
