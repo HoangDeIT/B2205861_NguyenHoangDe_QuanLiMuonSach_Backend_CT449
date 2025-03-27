@@ -92,7 +92,7 @@ class ReaderService {
             throw new Error("ID không hợp lệ");
         }
 
-        const docgia = this.getBy_Id(id);
+        const docgia = await this.getBy_Id(id);
         const theoDoiMuonSachService = new TheoDoiMuonSachService(MongoDB.client);
         await theoDoiMuonSachService.deleteByMADOCGIA(docgia.MADOCGIA);
 

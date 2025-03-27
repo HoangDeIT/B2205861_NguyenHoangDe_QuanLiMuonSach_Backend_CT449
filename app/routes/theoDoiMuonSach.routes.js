@@ -1,18 +1,20 @@
 const express = require("express");
 const controller = require("../controllers/theoDoiMuonSach.controller");
+const authorizeRole = require("../middlewares/role");
+const authenticateToken = require("../middlewares/auth");
 const router = express.Router();
 
 router.route("/")
-    .post(controller.create)       // Thêm theo dõi mượn sách
-    .get(controller.findAll)       // Lấy DS theo dõi + search + phân trang
-    .put(controller.updateById);   // Cập nhật
+    .post(authenticateToken, authorizeRole("admin"), controller.create)       // Thêm theo dõi mượn sách
+    .get(authenticateToken, authorizeRole("admin"), controller.findAll)       // Lấy DS theo dõi + search + phân trang
+    .put(authenticateToken, authorizeRole("admin"), controller.updateById);   // Cập nhật
 router.route("/user")
-    .post(controller.createByUser)
-    .get(controller.findMuonByDocGia);
+    .post(authenticateToken, authorizeRole("user"), controller.createByUser)
+    .get(authenticateToken, authorizeRole("user"), controller.findMuonByDocGia);
 router.route("/:id")
-    .delete(controller.deleteById) // Xóa theo _id
-    .get(controller.getById)
-    .post(controller.handleTraSach)
+    .delete(authenticateToken, authorizeRole("admin"), controller.deleteById) // Xóa theo _id
+    .get(authenticateToken, authorizeRole("admin", "user"), controller.getById)
+    .post(authenticateToken, authorizeRole("admin"), controller.handleTraSach)
 
 
 module.exports = router;

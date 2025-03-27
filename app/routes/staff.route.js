@@ -1,10 +1,12 @@
 const express = require('express');
 const staffs = require("../controllers/staff.controller");
 const router = express.Router();
+const authenticateToken = require("../middlewares/auth");
+const authorizeRole = require("../middlewares/role");
 router.route("/")
-    .post(staffs.create)
-    .get(staffs.findAll)
-    .put(staffs.updateById);
+    .post(authenticateToken, authorizeRole("admin"), staffs.create)
+    .get(authenticateToken, authorizeRole("admin"), staffs.findAll)
+    .put(authenticateToken, authorizeRole("admin"), staffs.updateById);
 router.route("/:id")
-    .delete(staffs.deleteById);
+    .delete(authenticateToken, authorizeRole("admin"), staffs.deleteById);
 module.exports = router;

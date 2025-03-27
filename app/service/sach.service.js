@@ -135,7 +135,7 @@ class SachService {
         const sachList = await this.Sach.find({ MANXB }).toArray();
         const theoDoiMuonSachService = new TheoDoiMuonSachService(MongoDB.client)
 
-        await Promise.all(sachList.map(sach => theoDoiMuonSachService.deleteByMASACH(sach.MASACH)));
+        await Promise.all(sachList.map(async (sach) => await theoDoiMuonSachService.deleteByMASACH(sach.MASACH)));
 
         const result = await this.Sach.deleteMany({ MANXB });
         return result.deletedCount > 0;
