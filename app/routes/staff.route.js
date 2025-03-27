@@ -6,7 +6,7 @@ const authorizeRole = require("../middlewares/role");
 router.route("/")
     .post(authenticateToken, authorizeRole("admin"), staffs.create)
     .get(authenticateToken, authorizeRole("admin"), staffs.findAll)
-    .put(authenticateToken, authorizeRole("admin"), staffs.updateById);
+    .patch(authenticateToken, authorizeRole("admin"), staffs.updateById);
 router.route("/:id")
     .delete(authenticateToken, authorizeRole("admin"), staffs.deleteById);
 module.exports = router;

@@ -7,7 +7,7 @@ const router = express.Router();
 router.route("/")
     .post(authenticateToken, authorizeRole("admin"), controller.create)       // Thêm theo dõi mượn sách
     .get(authenticateToken, authorizeRole("admin"), controller.findAll)       // Lấy DS theo dõi + search + phân trang
-    .put(authenticateToken, authorizeRole("admin"), controller.updateById);   // Cập nhật
+    .patch(authenticateToken, authorizeRole("admin"), controller.updateById);   // Cập nhật
 router.route("/user")
     .post(authenticateToken, authorizeRole("user"), controller.createByUser)
     .get(authenticateToken, authorizeRole("user"), controller.findMuonByDocGia);
