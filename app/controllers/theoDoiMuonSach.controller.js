@@ -1,6 +1,6 @@
 const TheoDoiMuonSachService = require("../service/theoDoiMuonSach.service");
 const MongoDB = require("../utils/mongodb.util");
-
+const TokenUtil = require("../utils/token.util");
 exports.create = async (req, res) => {
     try {
         const service = new TheoDoiMuonSachService(MongoDB.client);
@@ -60,12 +60,42 @@ exports.getById = async (req, res) => {
         return res.status(500).send({ message: "Lỗi khi tìm theo dõi muien sach" });
     }
 };
-exports.handleTraSach = (req, res) => {
+exports.handleTraSach = async (req, res) => {
     try {
         const service = new TheoDoiMuonSachService(MongoDB.client);
-        const doc = service.handleTraSach(req.params.id);
+        const doc = await service.handleTraSach(req.params.id);
         return res.send(doc);
     } catch (error) {
         return res.status(500).send({ message: "Lỗi khi tìm theo dõi muien sach" });
     }
-} 
+}
+exports.createByUser = async (req, res) => {
+    try {
+        // const service = new TheoDoiMuonSachService(MongoDB.client);
+        // const doc = await service.create(req.body);
+        const service = new TheoDoiMuonSachService(MongoDB.client);
+        const MADOCGIA = TokenUtil.getUserFromToken(req?.headers?.authorization);
+        const soLuongSachDaMuon = await service.countByMADOCGIA(MADOCGIA);
+        if (soLuongSachDaMuon >= 3) return res.status(500).send({ message: "Vui lòng trả" });
+        const MASACH = req.body.MASACH;
+        const NGAYMUON = new Date().toLocaleDateString("en-GB");
+        const doc = await service.create({ MADOCGIA, MASACH, NGAYMUON })
+        return res.send(doc);
+    } catch (error) {
+        return res.status(500).send({ message: error.message });
+    }
+};
+exports.findMuonByDocGia = async (req, res) => {
+    try {
+        const MANV = TokenUtil.getUserFromToken(req?.headers?.authorization);
+        const service = new TheoDoiMuonSachService(MongoDB.client);
+        const doc = await service.getByIdDocGia(MANV);
+
+        if (!doc) {
+            return res.status(404).send({ message: "Không tìm thấy theo dõi mượn sách" });
+        }
+        return res.send(doc);
+    } catch (error) {
+        return res.status(500).send({ message: "Lỗi khi tìm theo dõi muien sach" });
+    }
+}

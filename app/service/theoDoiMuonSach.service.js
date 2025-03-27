@@ -1,7 +1,7 @@
 const { ObjectId } = require("mongodb");
-const ReaderService = require("./reader.service");
-const SachService = require("./sach.service");
+
 const MongoDB = require("../utils/mongodb.util");
+
 
 class TheoDoiMuonSachService {
     constructor(client) {
@@ -20,8 +20,10 @@ class TheoDoiMuonSachService {
     }
 
     async create(payload) {
-        const doc = this.extractTheoDoiMuonSachData(payload);
+        const SachService = require("./sach.service");
+
         const sachService = new SachService(MongoDB.client);
+        const doc = this.extractTheoDoiMuonSachData(payload);
         const sach = await sachService.getById(doc.MASACH);
         console.log("323")
         if (sach.SOQUYEN === 0) {
@@ -48,17 +50,28 @@ class TheoDoiMuonSachService {
             .skip(skip)
             .limit(limit)
             .toArray();
+        const ReaderService = require("./reader.service");
+        const SachService = require("./sach.service");
+        const readerService = new ReaderService(MongoDB.client);
+        const sachService = new SachService(MongoDB.client);
+        try {
+            docs = await Promise.all(docs.map(async (item) => {
 
-        docs = await Promise.all(docs.map(async (item) => {
 
 
-            const readerService = new ReaderService(MongoDB.client)
-            const sachService = new SachService(MongoDB.client)
-            const reader = await readerService.getById(item.MADOCGIA);
-            const sach = await sachService.getById(item.MASACH);
+                const reader = await readerService.getById(item.MADOCGIA);
+                const sach = await sachService.getById(item.MASACH);
+                console.log(item.MADOCGIA)
+                console.log(reader)
+                return {
+                    ...item, HoTenDocGia: reader ? reader.HOLOT + " " + reader.TEN : "Không xác định",
+                    TenSach: sach ? sach.TENSACH : "Không xác định"
+                };
+            }));
+        } catch (e) {
+            console.log(e)
+        }
 
-            return { ...item, HoTenDocGia: reader.HOLOT + " " + reader.TEN, TenSach: sach.TENSACH };
-        }))
         const total = await this.TheoDoiMuonSach.countDocuments(query);
         return {
             data: docs,
@@ -90,8 +103,11 @@ class TheoDoiMuonSachService {
         return result.deletedCount > 0;
     }
     async getByIdDocGia(id) {
-        const readerService = new ReaderService(MongoDB.client)
-        const sachService = new SachService(MongoDB.client)
+        const ReaderService = require("./reader.service");
+        const SachService = require("./sach.service");
+        const readerService = new ReaderService(MongoDB.client);
+        const sachService = new SachService(MongoDB.client);
+
 
         let res = await this.TheoDoiMuonSach.find({ MADOCGIA: id }).toArray();
         res = await Promise.all(res.map(async (item) => {
@@ -119,6 +135,7 @@ class TheoDoiMuonSachService {
         // Chuyển đổi ngày hiện tại thành định dạng DD/MM/YYYY
         const today = new Date();
         const formattedDate = today.toLocaleDateString("en-GB");  // Định dạng DD/MM/YYYY
+        const SachService = require("./sach.service");
         const sachService = new SachService(MongoDB.client);
         const muon = await this.getById(payload);
         const sach = await sachService.getById(muon.MASACH);
@@ -132,7 +149,19 @@ class TheoDoiMuonSachService {
 
         return result;
     }
+    async deleteByMASACH(MASACH) {
+        const result = await this.TheoDoiMuonSach.deleteMany({ MASACH: MASACH });
+        return result.deletedCount > 0;
+    }
+    async deleteByMADOCGIA(MADOCGIA) {
+        const result = await this.TheoDoiMuonSach.deleteMany({ MADOCGIA: MADOCGIA });
+        return result.deletedCount > 0;
+    }
 
+    async countByMADOCGIA(MADOCGIA) {
+        const result = await this.TheoDoiMuonSach.countDocuments({ MADOCGIA: MADOCGIA, NGAYTRA: { $exists: false } });
+        return result;
+    }
 }
 
 module.exports = TheoDoiMuonSachService;

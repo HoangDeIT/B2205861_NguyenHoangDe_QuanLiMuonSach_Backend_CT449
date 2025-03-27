@@ -6,7 +6,11 @@ router.route("/")
     .post(readers.create)  // Thêm mới độc giả
     .get(readers.findAll)  // Lấy danh sách độc giả + tìm kiếm + phân trang
     .put(readers.updateById); // Cập nhật thông tin độc giả
-
+router.route("/user")
+    .get(readers.findByUser)
+    .put(readers.updatedByUser)
+router.route("/user/change-password")
+    .put(readers.changePassword)
 router.route("/:id")
     .delete(readers.deleteById); // Xóa độc giả theo ID
 

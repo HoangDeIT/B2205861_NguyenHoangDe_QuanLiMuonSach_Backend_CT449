@@ -17,11 +17,11 @@ exports.create = async (req, res) => {
 exports.findAll = async (req, res) => {
     try {
         const service = new SachService(MongoDB.client);
-        const { page = 1, limit = 10, search = "" } = req.query;
+        const { page = 1, limit = 10, search = "", MANXB = "", sort = "" } = req.query;
         const pageNumber = parseInt(page);
         const pageSize = parseInt(limit);
 
-        const result = await service.getAll(pageNumber, pageSize, search);
+        const result = await service.getAll(pageNumber, pageSize, search, MANXB, sort);
         return res.send(result);
     } catch (error) {
         return res.status(500).send({ message: "Lỗi khi lấy danh sách sách" });

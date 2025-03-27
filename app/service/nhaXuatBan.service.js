@@ -1,4 +1,9 @@
 const { ObjectId } = require("mongodb");
+const SachService = require("./sach.service");
+const MongoDB = require("../utils/mongodb.util");
+
+
+
 
 class NhaXuatBanService {
     constructor(client) {
@@ -19,9 +24,27 @@ class NhaXuatBanService {
 
     // Tạo mới
     async create(payload) {
-        const doc = this.extractNhaXuatBanData(payload);
-        const result = await this.NhaXuatBan.insertOne(doc);
-        return result;
+        const session = await this.NhaXuatBan.client.startSession();
+        try {
+            session.startTransaction();
+            const doc = this.extractNhaXuatBanData(payload);
+
+            const maxNXB = await this.NhaXuatBan.find({ MANXB: /^NXB\d+$/ }).toArray();
+            const maxNumber = maxNXB
+                .map(item => parseInt(item.MANXB.replace("NXB", ""), 10))
+                .filter(num => !isNaN(num))
+                .reduce((max, num) => Math.max(max, num), 0);
+
+            doc.MANXB = `NXB${maxNumber + 1}`;
+            const result = await this.NhaXuatBan.insertOne(doc, { session });
+            await session.commitTransaction();
+            return result;
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
     }
 
     // Lấy danh sách + tìm kiếm + phân trang
@@ -59,12 +82,22 @@ class NhaXuatBanService {
         );
         return result;
     }
-
+    async getBy_Id(id) {
+        if (!ObjectId.isValid(id)) {
+            throw new Error("ID không hợp lệ");
+        }
+        const result = await this.NhaXuatBan.findOne({ _id: new ObjectId(id) });
+        return result;
+    }
     // Xóa
     async delete(id) {
         if (!ObjectId.isValid(id)) {
             throw new Error("ID không hợp lệ");
         }
+        const sachService = new SachService(MongoDB.client);
+
+        const NXB = await this.getBy_Id(id);
+        await sachService.deleteByMANXB(NXB.MANXB);
         const result = await this.NhaXuatBan.deleteOne({ _id: new ObjectId(id) });
         return result.deletedCount > 0;
     }

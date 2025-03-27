@@ -1,5 +1,6 @@
-const { ObjectId, ReturnDocument } = require("mongodb");
+const { ObjectId } = require("mongodb");
 const bcrypt = require("bcryptjs");
+
 class StaffService {
     constructor(client) {
         this.NhanVien = client.db().collection("NhanVien");
@@ -17,19 +18,30 @@ class StaffService {
         return contact;
     }
     async create(payload) {
-        payload.Password = await bcrypt.hash(payload.Password, 10);
-        const nhanVien = this.extractNhanVienData(payload);
-        const maxNV = await this.NhanVien.find().sort({ MANV: -1 }).limit(1).toArray();
-        let newId = "NV1";
-        if (maxNV.length > 0) {
-            const lastId = maxNV[0].MANV;
-            const lastIdNumber = parseInt(lastId.replace("NV", ""));
-            newId = `NV${lastIdNumber + 1}`;
+        const session = await this.NhanVien.client.startSession();
+        try {
+            session.startTransaction();
+            payload.Password = await bcrypt.hash(payload.Password, 10);
+            const nhanVien = this.extractNhanVienData(payload);
+
+            const maxNV = await this.NhanVien.find({ MANV: /^NV\d+$/ }).toArray();
+            const maxNumber = maxNV
+                .map(item => parseInt(item.MANV.replace("NV", ""), 10))
+                .filter(num => !isNaN(num))
+                .reduce((max, num) => Math.max(max, num), 0);
+
+            nhanVien.MANV = `NV${maxNumber + 1}`;
+            const result = await this.NhanVien.insertOne(nhanVien, { session });
+            await session.commitTransaction();
+            return result;
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
         }
-        nhanVien.MANV = newId;
-        const result = await this.NhanVien.insertOne(nhanVien);
-        return result;
     }
+
     async getAll(page, limit, search) {
         const query = search ? { HoTenNV: { $regex: search, $options: "i" } } : {};
         const staffs = await this.NhanVien.find(query)

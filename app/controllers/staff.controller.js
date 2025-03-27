@@ -21,13 +21,21 @@ exports.findAll = async (req, res) => {
     res.json(staffs);
 };
 exports.updateById = async (req, res) => {
-    const service = new StaffService(MongoDB.client);
-
-    const staff = await service.update(req.body._id, req.body);
-    res.json(staff);
+    try {
+        const service = new StaffService(MongoDB.client);
+        const staff = await service.update(req.body._id, req.body);
+        res.json(staff);
+    } catch (error) {
+        res.status(500).send({ message: "Lỗi khi cập nhật nhân viên" });
+    }
 };
+
 exports.deleteById = async (req, res) => {
-    const service = new StaffService(MongoDB.client);
-    const staff = await service.delete(req.params.id);
-    res.json(staff);
+    try {
+        const service = new StaffService(MongoDB.client);
+        const staff = await service.delete(req.params.id);
+        res.json(staff);
+    } catch (error) {
+        res.status(500).send({ message: "Lỗi khi xóa nhân viên" });
+    }
 };
